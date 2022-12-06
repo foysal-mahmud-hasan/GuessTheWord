@@ -16,13 +16,17 @@
 
 package com.example.android.guesstheword.screens.game
 
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.getSystemService
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -59,6 +63,7 @@ class GameFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(GameViewModel::class.java)
 
         binding.gameViewModel = viewModel
+        binding.lifecycleOwner = this
 
         //already setted bt binding
         /*binding.correctButton.setOnClickListener {
@@ -68,17 +73,18 @@ class GameFragment : Fragment() {
         binding.skipButton.setOnClickListener {
             viewModel.onSkip()
         }*/
-
-        viewModel.score.observe(viewLifecycleOwner, Observer { newScore ->
-
-            binding.scoreText.text = newScore.toString()
-
-        })
-        viewModel.word.observe(viewLifecycleOwner, Observer{ newWord ->
-
-            binding.wordText.text = newWord.toString()
-
-        })
+        // binded
+//        viewModel.score.observe(viewLifecycleOwner, Observer { newScore ->
+//
+//            binding.scoreText.text = newScore.toString()
+//
+//        })
+        // already done by binding
+//        viewModel.word.observe(viewLifecycleOwner, Observer{ newWord ->
+//
+//            binding.wordText.text = newWord.toString()
+//
+//        })
         viewModel.eventGameFinish.observe(viewLifecycleOwner, Observer{ hasFinished ->
 
             if(hasFinished){
@@ -86,11 +92,18 @@ class GameFragment : Fragment() {
                 viewModel.onGameFinishComplete()
             }
         })
+        viewModel.eventBuzz.observe(viewLifecycleOwner, Observer { buzzType ->
+            if (buzzType != GameViewModel.BuzzType.NO_BUZZ) {
+                buzz(buzzType.pattern)
+                viewModel.onBuzzComplete()
+            }
+        })
+        /*binded
         viewModel.currentTime.observe(viewLifecycleOwner, Observer{ timeFinished ->
 
             binding.timerText.text = DateUtils.formatElapsedTime(timeFinished)
 
-        })
+        })*/
 
         return binding.root
 
@@ -106,6 +119,17 @@ class GameFragment : Fragment() {
     }
 
     /** Methods for updating the UI **/
+    private fun buzz(pattern: LongArray) {
+        val buzzer = activity?.getSystemService<Vibrator>()
 
+        buzzer?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                buzzer.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            } else {
+                //deprecated in API 26
+                buzzer.vibrate(pattern, -1)
+            }
+        }
+    }
 
 }

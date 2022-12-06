@@ -57,7 +57,8 @@ class ScoreFragment : Fragment() {
         viewModel = ViewModelProvider(this, viewModelFactory).get(ScoreViewModel::class.java)
         // Get args using by navArgs property delegate
         binding.scoreViewModel = viewModel
-
+        binding.lifecycleOwner = this
+        //binded
         viewModel.score.observe(viewLifecycleOwner, Observer { newScore ->
             binding.scoreText.text = newScore.toString()
         })
